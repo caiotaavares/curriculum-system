@@ -21,7 +21,7 @@ public class PainelCurriculo extends JFrame implements RefreshListener{
         this.sistemaCurriculo = sistemaCurriculo;
 
         setTitle("Currículo");
-        setSize(800, 600);
+        setSize(1000, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Create menu bar
@@ -116,50 +116,98 @@ public class PainelCurriculo extends JFrame implements RefreshListener{
         List<Secao> sections = sistemaCurriculo.getControlador().obterSecoes();
         Docente docente = sistemaCurriculo.getControlador().obterDocente();
 
-        // Verifica se a lista de seções está vazia
+        sectionsPanel.setLayout(new BoxLayout(sectionsPanel, BoxLayout.Y_AXIS));
+        sectionsPanel.setBorder(new EmptyBorder(10, 10, 10, 10)); // Margem geral
+
         if (sections.isEmpty()) {
-            // Se não houver seções, exibe a imagem centralizada
             addImagePanel();
         } else {
-            // Inicializa o HTML consolidado para o documento com estilos CSS embutidos
-            StringBuilder htmlContent = new StringBuilder("<html><body style='margin: 0; padding: 0;'>");
+            // Adiciona título e informações do docente
+            JPanel headerPanel = new JPanel();
+            headerPanel.setLayout(new BorderLayout());
+            headerPanel.add(new JLabel("<html><h1>" + docente.getNome() + "</h1></html>"), BorderLayout.NORTH);
+            headerPanel.add(new JLabel("<html><h2>" + docente.getNomeInstituicao() + "</h2><hr></html>"), BorderLayout.CENTER);
+            sectionsPanel.add(headerPanel);
 
-            // Define a estrutura do documento com largura máxima e quebras automáticas
-            htmlContent.append("<div style='max-width: 600px; margin: 0 auto; padding-right: 20px; word-wrap: break-word;'>");
-
-            htmlContent.append("<h1 style='margin: 5px 0;'>").append(docente.getNome()).append("</h1>");
-            htmlContent.append("<h2 style='margin: 5px 0;'>").append(docente.getNomeInstituicao()).append("</h2>");
-            htmlContent.append("<hr style='border: 1px solid #000; margin: 10px 0;'>");
-            // Adiciona cada seção e seus itens ao HTML
             for (Secao section : sections) {
-                htmlContent.append("<h2 style='margin: 5px 0;'>").append(section.getNome()).append("</h2>");
-                htmlContent.append("<ul style='margin: 10px; padding-left: 20px;'>");
+                // Painel para cada seção
+                JPanel sectionPanel = new JPanel();
+                sectionPanel.setLayout(new BorderLayout());
+                sectionPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Espaçamento interno
 
+                // Cabeçalho da seção com título e botões "Editar" e "Excluir"
+                JPanel sectionHeaderPanel = new JPanel();
+                sectionHeaderPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+                JLabel sectionLabel = new JLabel("<html><h3>" + section.getNome() + "</h3></html>");
+                JButton editSectionButton = new JButton("Editar");
+                JButton deleteSectionButton = new JButton("Excluir");
+
+                // Configura as ações dos botões de seção
+                editSectionButton.addActionListener(e -> {
+//                    editarSecao(section);
+                    refreshSections(sectionsPanel);
+                });
+                deleteSectionButton.addActionListener(e -> {
+//                    excluirSecao(section);
+                    refreshSections(sectionsPanel);
+                });
+
+                // Adiciona os botões e o título ao painel do cabeçalho da seção
+                sectionHeaderPanel.add(editSectionButton);
+                sectionHeaderPanel.add(deleteSectionButton);
+                sectionHeaderPanel.add(sectionLabel);
+                sectionPanel.add(sectionHeaderPanel, BorderLayout.NORTH);
+
+                // Painel para os itens da seção
+                JPanel itemsPanel = new JPanel();
+                itemsPanel.setLayout(new BoxLayout(itemsPanel, BoxLayout.Y_AXIS));
+
+                // Adiciona cada item com os botões "Editar" e "Excluir" à esquerda
                 for (ItensDeSecao item : section.getItensDeSecao()) {
-                    htmlContent.append("<li style='margin-bottom: 5px;'><b>")
-                            .append(item.getNome()).append("</b>: ")
-                            .append(item.getDescricao()).append("</li>");
+                    JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                    JLabel itemLabel = new JLabel("<html><b>" + item.getNome() + "</b>: " + item.getDescricao() + "</html>");
+                    JButton editItemButton = new JButton("Editar");
+                    JButton deleteItemButton = new JButton("Excluir");
+
+                    // Configura as ações dos botões de item
+                    editItemButton.addActionListener(e -> {
+//                        editarItem(item);
+                        refreshSections(sectionsPanel);
+                    });
+                    deleteItemButton.addActionListener(e -> {
+//                        excluirItem(section, item);
+                        refreshSections(sectionsPanel);
+                    });
+
+                    // Adiciona os botões e o rótulo ao painel do item
+                    itemPanel.add(editItemButton);
+                    itemPanel.add(deleteItemButton);
+                    itemPanel.add(itemLabel);
+                    itemsPanel.add(itemPanel);
                 }
 
-                htmlContent.append("</ul>");
+                // Adiciona botão para adicionar um novo item
+                JButton addItemButton = new JButton("Adicionar Item");
+                addItemButton.addActionListener(e -> {
+//                    adicionarItemNaSecao(section);
+                    refreshSections(sectionsPanel);
+                });
+                itemsPanel.add(addItemButton);
+
+                // Adiciona itemsPanel ao sectionPanel
+                sectionPanel.add(itemsPanel, BorderLayout.LINE_START);
+
+                // Adiciona sectionPanel ao sectionsPanel
+                sectionsPanel.add(sectionPanel);
             }
 
-            // Fecha o contêiner e o HTML consolidado
-            htmlContent.append("</div></body></html>");
-
-            // Configura o JEditorPane para exibir o conteúdo HTML consolidado
-            JEditorPane editorPane = new JEditorPane();
-            editorPane.setContentType("text/html");
-            editorPane.setText(htmlContent.toString());
-            editorPane.setBorder(new EmptyBorder(10, 10, 10, 10));
-            editorPane.setEditable(false);
-
-            // Adiciona o JEditorPane em um JScrollPane para rolagem
-            JScrollPane scrollPane = new JScrollPane(editorPane);
-            scrollPane.setPreferredSize(new Dimension(600, 400)); // Define um tamanho fixo para o JScrollPane, se necessário
-
-            sectionsPanel.setLayout(new BorderLayout()); // Define o layout do sectionsPanel
-            sectionsPanel.add(scrollPane, BorderLayout.CENTER);
+            // Botão para adicionar uma nova seção
+            JButton addSectionButton = new JButton("Adicionar Seção");
+            addSectionButton.addActionListener(e -> {
+//                adicionarNovaSecao();
+                refreshSections(sectionsPanel);
+            });
+            sectionsPanel.add(addSectionButton);
         }
 
         // Atualiza a interface
